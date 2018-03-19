@@ -1,145 +1,107 @@
 import React, { Component } from 'react';
-import SingleTodo from './SingleTodo';
-import FaIconPack from 'react-icons/lib/fa';
+import { Form } from './Form';
+import { List } from './List';
+import { SingleTodo } from './SingleTodo';
 
 export class App extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       todos: [],
-      currentTodo: '',
-      select: ''
+      text: '',
+      priority: '',
+    }
+
+    this.count = 0;
+    this.handleButtonClick =  this.handleButtonClick.bind(this);
+    this.handlePriority = this.handlePriority.bind(this);
+    this.onInputChange = this.onInputChange.bind(this);
+    this.deleteTodo = this.deleteTodo.bind(this);
+    this.handleEdit = this.handleEdit.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleSave = this.handleSave.bind(this);
+  }
+
+  handleButtonClick(e) {
+    e.preventDefault();
+    if (this.state.text == '') {
+        return false;
+    }
+
+    const newTodo = {
+        id: this.count++,
+        value: this.state.text,
+        priority: this.state.priority,
+        isEditing: false
     };
 
-    this.handleButtonClick =  this.handleButtonClick.bind(this);
-    this.onInputChange = this.onInputChange.bind(this);
-    this.onSelect = this.onSelect.bind(this);
-    
+    const todos = this.state.todos;
+    todos.push(newTodo);
+    this.setState({ todos, text: '' });
+  }
+
+  handlePriority(e) {
+    this.setState({ priority: e.target.value });
   }
 
   onInputChange(e) {
-    this.setState({ currentTodo: e.target.value });
+    this.setState({ text: e.target.value });
   }
 
-  onSelect(e) {
-    console.log("this.state.select: ",e.target.value);
-    this.setState({ select: e.target.value });
+  deleteTodo(index) {
+    const newTodos = [...this.state.todos];
+    newTodos.splice(index, 1);
+    this.setState({tasks: newTodos });
   }
 
-  handleButtonClick() {
-    let todosCopy = this.state.todos.slice();
-    let todoInput = this.state.currentTodo;
-    let todoPriority = this.state.select;
-    let todoObj = {todoInput, todoPriority};
-    todosCopy.push(todoObj);
+  handleEdit(id) {
+    let newTodos = this.state.todos.slice();
+    let index = newTodos.findIndex(todo => todo.id === id);
 
-    this.setState({ todos: todosCopy, currentTodo: '' })
+    newTodos[index].isEditing = !newTodos[index].isEditing;
+    this.setState({ todos: newTodos });
   }
 
-  deleteTodo(i) {
-    let todosCopy = this.state.todos.slice();
-    todosCopy.splice(i, 1);
-
-    this.setState({ todos: todosCopy });
+  handleCancel() {
+    this.setState({ isEditing: false });
   }
 
-  render() {
-    
-    return (
-      <div className='container'>
-      
-      
-        <div className="container top">
-          <h1 className="display-4">Very Simple ToDo App</h1>
-          <p className="lead">Track all of the things</p>
-          <hr className="my-4"></hr>
-        </div>
-      
-     {/* Left Column - Add New ToDo */}   
-      <div className="row">
-        <div className="col-lg-4 rounded">
-          <div className="card">
-            
-            <div className="card-header">
-              Add New ToDo
+  handleSave(id, text, priority) {
+    let newTodos = this.state.todos.slice();
+    let index = newTodos.findIndex(todo => todo.id === id);
+
+    newTodos[index].value = text;
+    newTodos[index].priority = priority;
+    newTodos[index].isEditing = false;
+
+    this.setState({ todos: newTodos });
+  }
+
+  render(){
+      return (
+        <div className='container'>
+            <div className='container top'>
+                <h1 className='display-4'>Very Simple ToDo App</h1>
+                <p className='lead'>Track all of the things</p>
+                <hr className='my-4'></hr>
             </div>
-            
-            <div className="card-body">
-              
-              <h5 className="card-title">I want to...</h5>
-              
-              <div className="form-group">
-                <textarea 
-                  className="form-control" 
-                  value={this.state.currentTodo}
-                  onChange={this.onInputChange}
-                  id="exampleFormControlTextarea1" 
-                  rows="3">
-                </textarea>
-              </div>
-              
-              <br />
-              <h5 className="card-title">How much of a priority is this?</h5>
-            
-            
-              <div className="form-group">
-                <select 
-                  className="custom-select"
-                  defaultValue="none" 
-                  onChange={this.onSelect}
-                  id="exampleFormControlSelect1">
-                    <option value="none">Select a Priority</option>
-                    <option value="high">high</option>
-                    <option value="medium">medium</option>
-                    <option value="low">low</option>
-                </select>
-              </div>
-              </div>
-            
-              <div className="card-footer">
-                <button 
-                      type="button" 
-                      className="btn btn-success btn-lg btn-block" 
-                      onClick={this.handleButtonClick}>
-                Add
-                </button>
-              </div>
-          
-            
-          </div>
-        </div>
 
-      
+            <div className='row'>
+                <Form 
+                    priority={this.state.priority}
+                    changePriority={this.handlePriority}
+                    text={this.state.text}
+                    onInputChange={this.onInputChange}
+                    handleButtonClick={this.handleButtonClick} />
 
-      {/* Right Column - View ToDos */}
-      <div className="col-lg-8 rounded">
-        <div className="card">
-          <div className="card-header">View ToDos</div>
-
-            {this.state.todos.length === 0 ? 
-              <div className="card-title text-left alert alert-primary"><strong>Welcome to Very Simple Todo App!</strong><br />Get started now by adding a new todo on the left.
-              
-              </div>
-            :
-              <div><ul className="list-group">
-              
-              {this.state.todos.map((todo, i) => {
-                return (
-                  <SingleTodo key={i} todo={todo} delete={() => this.deleteTodo(i)} />
-                );
-              })}
-              
-              </ul></div>
-            }
-
-          </div>
-        </div>
-      </div>
-
-      </div>
-  
-
-    );
+                <List
+                    todos={this.state.todos}
+                    handleEdit={this.handleEdit}
+                    deleteTodo={this.deleteTodo}
+                    save={this.handleSave} />
+            </div>
+        </div>   
+      )
   }
 }
 
